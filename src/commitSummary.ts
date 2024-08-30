@@ -94,20 +94,18 @@ async function getOpenAICompletion(
       throw new Error("OpenAI query too big");
     }
 
-    const response = await openai.completions.create({
+    const response = await openai.chat.completions.create({
       model: MODEL_NAME,
-      prompt: openAIPrompt,
+      messages: [{ role: "user", content: `${openAIPrompt}` }],
       max_tokens: MAX_TOKENS,
       temperature: TEMPERATURE,
     });
 
-    if (
-      response.choices !== undefined &&
-      response.choices.length > 0
-    ) {
+    if (response.choices !== undefined && response.choices.length > 0) {
       completion = postprocessSummary(
         diffResponse.data.files.map((file: any) => file.filename),
-        response.choices[0].text ?? "Error: couldn't generate summary",
+        response.choices[0].message.content ??
+          "Error: couldn't generate summary",
         diffMetadata
       );
     }
@@ -230,6 +228,10 @@ export async function summarizeCommits(
   const headCommitShaAndSummary = commitSummaries.find(
     ([sha]) => sha === headCommit
   );
+  console.log('needsToSummarizeHead', needsToSummarizeHead);
+  console.log('headCommitShaAndSummary', headCommitShaAndSummary);
+
+  
   if (needsToSummarizeHead && headCommitShaAndSummary !== undefined) {
     let prSummary = "Error summarizing PR";
     try {

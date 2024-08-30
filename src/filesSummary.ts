@@ -44,18 +44,16 @@ async function getOpenAISummaryForFile(
       throw new Error("OpenAI query too big");
     }
 
-    const response = await openai.completions.create({
+    const response = await openai.chat.completions.create({
       model: MODEL_NAME,
-      prompt: openAIPrompt,
+      messages: [{ role: "user", content: `${openAIPrompt}` }],
       max_tokens: MAX_TOKENS,
       temperature: TEMPERATURE,
     });
-    if (
-      response.choices !== undefined &&
-      response.choices.length > 0
-    ) {
+    if (response.choices !== undefined && response.choices.length > 0) {
       return (
-        response.choices[0].text ?? "Error: couldn't generate summary"
+        response.choices[0].message?.content ??
+        "Error: couldn't generate summary"
       );
     }
   } catch (error) {
